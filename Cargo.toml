@@ -1,0 +1,8 @@
+[package]
+name = "morning"
+version = "0.1.0"
+authors = ["Emile Arseneault <emile.arseneault@usherbrooke.ca>"]
+edition = "2018"
+
+[dependencies]
+dirs = "1.0"
