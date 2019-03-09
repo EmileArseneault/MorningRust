@@ -81,9 +81,9 @@ impl Configuration {
         }
     }
 
-    pub fn open_config(&self){
+    //pub fn open_config(&self){
 
-    }
+    //}
 
     pub fn is_portable(&self) -> bool{
         self.portable
