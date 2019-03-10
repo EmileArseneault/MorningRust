@@ -2,6 +2,7 @@ use std::path::PathBuf;
 use std::env;
 
 extern crate dirs;
+extern crate serde_json;
 
 #[derive(Debug)]
 pub struct Configuration {

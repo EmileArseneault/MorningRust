@@ -1,22 +1,28 @@
-use std::env;
-
 mod arguments;
 mod configuration;
 
 fn main() {
 
+    // Read configuration
     let conf = configuration::Configuration::new();
 
+    // Parse command line arguments
     match arguments::parser() {
-        arguments::Action::Help => {},
+        arguments::Action::Help => {
+            return;
+        },
         arguments::Action::Message(nb_of_days) => {
             println!("Message for {} days", nb_of_days);
         },
         arguments::Action::Past(nb_of_days) => {
             println!("Show past message of {} days", nb_of_days);
         },
-        arguments::Action::Command => {},
-        arguments::Action::Reminder => {},
+        arguments::Action::Command => {
+            println!("Open command file for editing");
+        },
+        arguments::Action::Reminder => {
+            println!("Open reminder file for editing");
+        },
     }
 
     if conf.is_portable(){
@@ -24,6 +30,7 @@ fn main() {
     } else {
         println!("-- Morning is installed on the system --");
     }
+
     println!();
     println!();
 }

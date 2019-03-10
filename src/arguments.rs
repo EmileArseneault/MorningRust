@@ -24,7 +24,7 @@ pub fn parser() -> Action {
     let mut argparser = getopts::Options::new();
     argparser.optflag("h", "help", "Display this help and exit");
     argparser.optflagopt("n", "next", "Used to write a message for the next day", "DAYS");
-    argparser.optopt("p", "past", "Show past messages for number of days", "DAYS");
+    argparser.optflagopt("p", "past", "Show past messages for number of days", "DAYS");
     argparser.optflag("c", "command", "Used to write commands to be executed each day");
     argparser.optflag("r", "reminder", "Used to write messages to be shown each day");
 
@@ -56,7 +56,7 @@ pub fn parser() -> Action {
         }
     }
 
-    let mut nb_of_days = 0;
+    let mut nb_of_days;
 
     // Check option used
     if matches.opt_present("n") {
@@ -86,12 +86,12 @@ pub fn parser() -> Action {
     }
 
     // Checks if other arguments were not parsed
-    let input = if !matches.free.is_empty() {
-        matches.free[0].clone()
-    } else {
+
+    if !matches.free.is_empty() {
+        println!("Extra arguments were found : {}", matches.free[0].clone());
         print_help(argparser);
-        return Action::Help;
-    };
+        action_to_take = Action::Help;
+    }
 
     return action_to_take;
 }
