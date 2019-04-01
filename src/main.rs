@@ -4,7 +4,8 @@ mod configuration;
 fn main() {
 
     // Read configuration
-    let conf = configuration::Configuration::new();
+    let mut conf = configuration::Configuration::new();
+    conf.initialize();
 
     // Parse command line arguments
     match arguments::parser() {
