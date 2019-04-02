@@ -3,7 +3,7 @@ use std::env;
 use std::path::Path;
 use std::fs;
 use serde::{Deserialize, Serialize};
-use serde_json::{Result, Value};
+//use serde_json::{Result, Value};
 
 extern crate dirs;
 extern crate serde;
@@ -132,9 +132,9 @@ impl Configuration {
         let config_file;
 
         if self.portable {
-            config_file = INSTALLED_CONFIG;
+            config_file = PORTABLE_CONFIG;
         } else {
-            config_file = PORTABLE_CONFIG; 
+            config_file = INSTALLED_CONFIG;
         }
 
         println!("Config file is : {}", config_file);

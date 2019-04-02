@@ -1,29 +1,42 @@
 mod arguments;
 mod configuration;
 
+use arguments::ArgParser;
+
 fn main() {
 
     // Read configuration
     let mut conf = configuration::Configuration::new();
     conf.initialize();
 
+    let argparser = ArgParser::new();
+
     // Parse command line arguments
-    match arguments::parser() {
-        arguments::Action::Help => {
+    match argparser.parser() {
+        Ok(action) => {
+            match action {
+                arguments::Action::Help => {
+                    argparser.print_help();
+                    return;
+                },
+                arguments::Action::Message(nb_of_days) => {
+                    println!("Message for {} days", nb_of_days);
+                },
+                arguments::Action::Past(nb_of_days) => {
+                    println!("Show past message of {} days", nb_of_days);
+                },
+                arguments::Action::Command => {
+                    println!("Open command file for editing");
+                },
+                arguments::Action::Reminder => {
+                    println!("Open reminder file for editing");
+                },
+            }
+        },
+        Err(stuff) => {
+            argparser.print_help();
             return;
-        },
-        arguments::Action::Message(nb_of_days) => {
-            println!("Message for {} days", nb_of_days);
-        },
-        arguments::Action::Past(nb_of_days) => {
-            println!("Show past message of {} days", nb_of_days);
-        },
-        arguments::Action::Command => {
-            println!("Open command file for editing");
-        },
-        arguments::Action::Reminder => {
-            println!("Open reminder file for editing");
-        },
+        }
     }
 
     if conf.is_portable(){
