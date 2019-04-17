@@ -1,5 +1,4 @@
 use std::env;
-use std::error::Error;
 
 extern crate getopts;
 
@@ -35,7 +34,7 @@ impl ArgParser{
         }
     }
 
-    pub fn print_help(self) {
+    pub fn print_help(&self) {
         print!("{}", self.help_string);
     }
 

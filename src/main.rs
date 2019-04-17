@@ -7,7 +7,16 @@ fn main() {
 
     // Read configuration
     let mut conf = configuration::Configuration::new();
-    conf.initialize();
+    match conf.initialize(){
+        Ok(o)  => {
+            println!("Config contains : {}", conf.get_history_len());
+        },
+        Err(e) => {
+            println!("Error while loading config");
+            println!("{}", e);
+            return;
+        }
+    }
 
     let argparser = ArgParser::new();
 
