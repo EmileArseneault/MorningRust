@@ -4,13 +4,15 @@ use std::io;
 use std::path::Path;
 use std::path::PathBuf;
 use serde::{Deserialize, Serialize};
-//use serde_json::{Result, Value};
 
 extern crate dirs;
 extern crate serde;
 extern crate serde_json;
 
-const INSTALLED_CONFIG:   &str = "/etc/morning.conf";
+const INSTALLED_SCRIPT:   &str = "/usr/bin/";
+// Configuration file for installed requires root access at /etc/morning.conf
+// use ~/.config/morning.conf or ~/.config/morning/morning.conf or ~/.morning/morning.conf?
+const INSTALLED_CONFIG:   &str = "~/.config/morning.conf";
 const INSTALLED_COMMAND:  &str = "~/.morning/command";
 const INSTALLED_REMINDER: &str = "~/.morning/reminder.txt";
 const INSTALLED_HISTORY:  &str = "~/.morning/history.json";
@@ -47,18 +49,18 @@ impl Configuration {
             executing_dir: Configuration::find_executing_dir(),
             current_dir:   Configuration::find_current_dir(),
             home_dir:      Configuration::find_home_dir(),
-            portable:      Configuration::installed_or_portable(),
+            portable:      Configuration::is_script_portable(),
             config_file:   None,
             config:        None
         }
     }
 
-    fn installed_or_portable() -> bool {
+    fn is_script_portable() -> bool {
 
-        let exd:      PathBuf = Configuration::find_executing_dir();
-        let home_dir: PathBuf = Configuration::find_home_dir();
+        let exd:           PathBuf = Configuration::find_executing_dir();
+        let installed_dir: PathBuf = PathBuf::from(INSTALLED_SCRIPT);
 
-        if exd == home_dir {
+        if exd == installed_dir {
             false
         } else {
             true
