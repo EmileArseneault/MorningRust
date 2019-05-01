@@ -1,7 +1,9 @@
 mod arguments;
 mod configuration;
+mod history;
 
 use arguments::ArgParser;
+use history::History;
 
 fn main() {
 
@@ -15,6 +17,40 @@ fn main() {
             println!("Error while loading config");
             println!("{}", e);
             return;
+        }
+    }
+
+    if conf.is_portable(){
+        println!("--    Morning is in portable mode    --");
+    } else {
+        println!("-- Morning is installed on the system --");
+    }
+
+    let mut history = History::new();
+/*     let message = String::from("Something is there");
+    let message2 = String::from("Other message");
+    history.add_message_now(message);
+    history.add_message_now(message2); */
+    match history.load_history(){
+        Ok(o) => {},
+        Err(e) => {
+            println!("Error while loading history");
+            println!("{}", e);
+        }
+    };
+    history.print_history();
+    match conf.history_path(){
+        Ok(path) => {
+            match history.write_history(path.as_path()) {
+                Ok(o) => {},
+                Err(e) => {
+                    println!("Error while writing history");
+                    println!("{}", e);
+                }
+            }
+        },
+        Err(e) => {
+            println!("No history file in configuration");
         }
     }
 
@@ -46,12 +82,6 @@ fn main() {
             argparser.print_help();
             return;
         }
-    }
-
-    if conf.is_portable(){
-        println!("--    Morning is in portable mode    --");
-    } else {
-        println!("-- Morning is installed on the system --");
     }
 
     println!();

@@ -137,11 +137,11 @@ impl Configuration {
             config_file = PathBuf::from(INSTALLED_CONFIG);
         }
 
-        println!("Current dir is : {}", self.current_dir.display());
+        /* println!("Current dir is : {}", self.current_dir.display());
         println!("Executing dir is : {}", self.executing_dir.display());
         println!("");
         println!("Config file is : {}", config_file.display());
-
+ */
         if !Path::exists(&config_file) {
 
             // Create new configuration
@@ -236,6 +236,17 @@ impl Configuration {
             None => {
                 return 0;
             }
+        }
+    }
+
+    pub fn history_path(&self) -> Result<PathBuf, io::Error> {
+        match &self.config {
+            Some(conf) => {
+                Ok(PathBuf::from(&conf.history_file))
+            },
+            None => {
+                Err(io::Error::new(io::ErrorKind::Other, "Serde Error"))
+            },
         }
     }
 }
