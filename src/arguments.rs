@@ -5,8 +5,8 @@ extern crate getopts;
 #[derive(Debug)]
 pub enum Action {
     Help,
-    Message(u32),
-    Past(u32),
+    Message(i64),
+    Past(i64),
     Command,
     Reminder,
 }
@@ -74,8 +74,8 @@ impl ArgParser{
         // Check option used
         if matches.opt_present("n") {
             nb_of_days = match matches.opt_str("n"){
-                // Unwrap panics if not an u32 so should match for error use ?
-                Some(nb_days) => nb_days.parse::<u32>().unwrap(),
+                // Unwrap panics if not an i64 so should match for error use ?
+                Some(nb_days) => nb_days.parse::<i64>().unwrap(),
                 None => 1, 
             };
 
@@ -84,8 +84,8 @@ impl ArgParser{
 
         if matches.opt_present("p") {
             nb_of_days = match matches.opt_str("p"){
-                // Unwrap panics if not an u32 so should match for error use ?
-                Some(nb_days) => nb_days.parse::<u32>().unwrap(),
+                // Unwrap panics if not an i64 so should match for error use ?
+                Some(nb_days) => nb_days.parse::<i64>().unwrap(),
                 None => 1, 
             };
 

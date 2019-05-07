@@ -1,6 +1,7 @@
 mod arguments;
 mod configuration;
 mod history;
+mod editing;
 
 use arguments::ArgParser;
 use history::History;
@@ -20,25 +21,33 @@ fn main() {
         }
     }
 
+    // Print portable header if it is
     if conf.is_portable(){
         println!("--    Morning is in portable mode    --");
     } else {
         println!("-- Morning is installed on the system --");
     }
 
+    // Load history
     let mut history = History::new();
-/*     let message = String::from("Something is there");
-    let message2 = String::from("Other message");
-    history.add_message_now(message);
-    history.add_message_now(message2); */
-    match history.load_history(){
-        Ok(o) => {},
+    match conf.history_path() {
+        Ok(path) => {
+            match history.load_history(path.as_path()){
+                Ok(o) => {},
+                Err(e) => {
+                    println!("Error while loading history");
+                    println!("{}", e);
+                }
+            };
+        },
         Err(e) => {
-            println!("Error while loading history");
+            println!("No history file in loaded configuration");
             println!("{}", e);
         }
-    };
+    }
     history.print_history();
+
+    // Write history
     match conf.history_path(){
         Ok(path) => {
             match history.write_history(path.as_path()) {
@@ -50,7 +59,7 @@ fn main() {
             }
         },
         Err(e) => {
-            println!("No history file in configuration");
+            println!("No history file in loaded configuration");
         }
     }
 
@@ -66,6 +75,16 @@ fn main() {
                 },
                 arguments::Action::Message(nb_of_days) => {
                     println!("Message for {} days", nb_of_days);
+
+                    let message = editing::edit_message();
+                    match message {
+                        Ok(message_string) => {
+                            history.add_delayed_message(nb_of_days, message_string);
+                        },
+                        Err(_) => {
+                            println!("Could not get message");
+                        }
+                    }
                 },
                 arguments::Action::Past(nb_of_days) => {
                     println!("Show past message of {} days", nb_of_days);
@@ -84,8 +103,23 @@ fn main() {
         }
     }
 
-    println!();
-    println!();
+    // Write history
+    match conf.history_path(){
+        Ok(path) => {
+            match history.write_history(path.as_path()) {
+                Ok(o) => {},
+                Err(e) => {
+                    println!("Error while writing history");
+                    println!("{}", e);
+                }
+            }
+        },
+        Err(e) => {
+            println!("No history file in loaded configuration");
+        }
+    }
+
+    history.print_history();
 }
 
 
