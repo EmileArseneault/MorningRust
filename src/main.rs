@@ -4,47 +4,40 @@ mod history;
 mod editing;
 
 use arguments::ArgParser;
+use configuration::Configuration;
 use history::History;
 
 fn main() {
 
     // Read configuration
-    let mut conf = configuration::Configuration::new();
-    match conf.initialize(){
-        Ok(_)  => {
-            println!("Config contains : {}", conf.get_history_len());
+    let mut conf =  match Configuration::new() {
+        Ok(conf)  => {
+            conf
         },
         Err(e) => {
             println!("Error while loading config");
             println!("{}", e);
             return;
         }
-    }
+    };
 
     // Print portable header if it is
     if conf.is_portable(){
         println!("----- Morning is in portable mode -----");
-    } else {
-        println!("-- Morning is installed on the system --");
     }
 
     // Load history
     let mut history = History::new();
-    match conf.history_path() {
-        Ok(path) => {
-            match history.load_history(path.as_path()){
-                Ok(_) => {},
-                Err(e) => {
-                    println!("Error while loading history");
-                    println!("{}", e);
-                }
-            };
-        },
+
+    match history.load_history(conf.history_path().as_path()) {
+        Ok(_) => {},
         Err(e) => {
-            println!("No history file in loaded configuration");
+            println!("Error while loading history");
             println!("{}", e);
+            return;
         }
-    }
+    };
+
 
     let argparser = ArgParser::new();
 
@@ -97,19 +90,20 @@ fn main() {
     }
 
     // Write history
-    match conf.history_path(){
-        Ok(path) => {
-            match history.write_history(path.as_path()) {
-                Ok(_) => {},
-                Err(e) => {
-                    println!("Error while writing history");
-                    println!("{}", e);
-                }
-            }
-        },
-        Err(_) => {
+    match history.write_history(conf.history_path().as_path()) {
+        Ok(_) => {},
+        Err(e) => {
             println!("Error while writing history");
-            println!("No history file in loaded configuration");
+            println!("{}", e);
+        }
+    }
+
+    // Write configuration if changed
+    match conf.write_config() {
+        Ok(_) => {},
+        Err(e) => {
+            println!("Error while writing configuration");
+            println!("{}", e);
         }
     }
 }

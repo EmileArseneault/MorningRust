@@ -37,15 +37,6 @@ pub struct History {
     list: Vec<Message>,
 }
 
-/* impl Message {
-    pub fn new(date: NaiveDate, text: String) -> Self {
-        Message{
-            date: date,
-            text: text,
-        }
-    }
-} */
-
 impl History {
 
     pub fn new() -> Self {

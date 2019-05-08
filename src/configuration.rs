@@ -1,6 +1,7 @@
 use std::env;
 use std::fs;
 use std::io;
+use std::error::Error;
 use std::path::Path;
 use std::path::PathBuf;
 use serde::{Deserialize, Serialize};
@@ -29,8 +30,9 @@ pub struct Configuration {
     current_dir:   PathBuf,
     home_dir:      PathBuf,
     portable:      bool,
-    config_file:   Option<PathBuf>,
-    config:        Option<ConfigurationContent>,
+    config_change: bool,
+    config_file:   PathBuf,
+    config:        ConfigurationContent,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -43,129 +45,56 @@ struct ConfigurationContent {
 
 impl Configuration {
 
-    pub fn new() -> Self {
+    pub fn new() -> Result<Self, Box<dyn Error>> {
 
-        Configuration {
-            executing_dir: Configuration::find_executing_dir(),
-            current_dir:   Configuration::find_current_dir(),
-            home_dir:      Configuration::find_home_dir(),
-            portable:      Configuration::is_script_portable(),
-            config_file:   None,
-            config:        None
-        }
-    }
-
-    fn is_script_portable() -> bool {
-
-        let exd:           PathBuf = Configuration::find_executing_dir();
-        let installed_dir: PathBuf = PathBuf::from(INSTALLED_SCRIPT);
-
-        if exd == installed_dir {
-            false
-        } else {
-            true
-        }
-    }
-
-    fn find_executing_dir() -> PathBuf {
-
-        let ret :PathBuf = match env::current_exe() {
-            Ok(cwd) => cwd,
-            Err(e)  => {
-                println!("Error while getting executing directory : {}", e);
-                PathBuf::new()
-            },
-        };
-
-        match ret.canonicalize(){
-            Ok(cwd) => {
-                // Remove executable name from path
-                match cwd.parent() {
-                    Some(cwd) => PathBuf::from(cwd),
-                    None => {
-                        println!("Error while getting parent path");
-                        println!("Maybe the executable is in root folder?");
-                        PathBuf::new()
-                    }
-                }
-            },
-            Err(e)  => {
-                println!("Error while canonising path : {}", e);
-                PathBuf::new()
-            },
-        }
-    }
-
-    fn find_current_dir() -> PathBuf {
-
-        let ret :PathBuf = match env::current_dir() {
-            Ok(exd) => exd,
-            Err(e) => {
-                println!("Error while getting current directory : {}", e);
-                PathBuf::new()
-            },
-        };
-
-        match ret.canonicalize(){
-            Ok(cwd) => cwd,
-            Err(e)  => {
-                println!("Error while canonising path : {}", e);
-                PathBuf::new()
-            },
-        }
-    }
-
-    fn find_home_dir() -> PathBuf {
-
-        match dirs::home_dir() {
-            Some(home_dir) => home_dir,
-            None           => {
-                println!("Error while getting home directory");
-                PathBuf::new()
-            },
-        }
-    }
-
-    pub fn initialize(&mut self) -> Result<(), io::Error>{
+        let executing_dir = find_executing_dir()?;
+        let current_dir   = find_current_dir()?;
+        let home_dir      = find_home_dir()?;
+        let portable      = is_script_portable();
+        let mut config_change = false;
 
         let mut config_file: PathBuf;
 
-        if self.portable {
-            config_file = PathBuf::from(&self.executing_dir);
+        if portable {
+            config_file = PathBuf::from(&executing_dir);
             config_file.push(PORTABLE_CONFIG);
         } else {
             config_file = PathBuf::from(INSTALLED_CONFIG);
         }
 
-        /* println!("Current dir is : {}", self.current_dir.display());
-        println!("Executing dir is : {}", self.executing_dir.display());
-        println!("");
-        println!("Config file is : {}", config_file.display());
- */
-        if !Path::exists(&config_file) {
+        let config: ConfigurationContent;
 
-            // Create new configuration
-            self.generate_config();
-            self.write_config(config_file.as_path())?;
+        if !Path::exists(&config_file) {
             println!("No configuration found, creating one");
 
+            // Create new configuration
+            config = Configuration::generate_config(portable, &executing_dir, &home_dir);
+            config_change = true;
         } else {
-
             // Read existing configuration
-            self.read_config(config_file.as_path())?;
+            config = Configuration::read_config(config_file.as_path())?;
         }
 
-        Ok(())
+        Ok(
+            Configuration {
+                executing_dir: executing_dir,
+                current_dir:   current_dir,
+                home_dir:      home_dir,
+                portable:      portable,
+                config_change: config_change,
+                config_file:   config_file,
+                config:        config
+            }
+        )
     }
 
-    fn read_config(&mut self, config_path: &Path) -> Result<(), io::Error>{
+    fn read_config(config_path: &Path) -> Result<ConfigurationContent, io::Error>{
         let json_str = fs::read_to_string(config_path)?;
         let json_config = serde_json::from_str(&json_str);
-        
+
         match json_config {
             Ok(config) => {
-                self.config = config;
-                Ok(())
+                Ok(config)
             },
             Err(e) => {
                 Err(io::Error::new(io::ErrorKind::Other, "Serde Error"))
@@ -173,54 +102,53 @@ impl Configuration {
         }
     }
 
-    fn write_config(&self, config_path: &Path) -> Result<(), io::Error> {
+    pub fn write_config(&self) -> Result<(), io::Error> {
 
-        let json_config = serde_json::to_string(&self.config)?;
-        fs::write(config_path, json_config)?;
+        if self.config_change {
+            let json_config = serde_json::to_string(&self.config)?;
+            fs::write(&self.config_file, json_config)?;
+        }
 
         Ok(())
     }
 
-    fn generate_config(&mut self) {
+    fn generate_config(portable: bool, executing_dir: &PathBuf, home_dir: &PathBuf) -> ConfigurationContent{
 
         let mut command_file:  PathBuf;
         let mut reminder_file: PathBuf;
         let mut history_file:  PathBuf;
 
-        if self.portable {
-            command_file  = PathBuf::from(&self.executing_dir);
-            reminder_file = PathBuf::from(&self.executing_dir);
-            history_file  = PathBuf::from(&self.executing_dir);
+        if portable {
+            command_file  = PathBuf::from(executing_dir);
+            reminder_file = PathBuf::from(executing_dir);
+            history_file  = PathBuf::from(executing_dir);
 
             command_file.push(PORTABLE_COMMAND);
             reminder_file.push(PORTABLE_REMINDER);
             history_file.push(PORTABLE_HISTORY);
 
-            self.config = Some(
-                ConfigurationContent {
-                    command_file:   command_file,
-                    reminder_file:  reminder_file,
-                    history_file:   history_file,
-                    history_length: 15,
-                }
-            )
+            ConfigurationContent {
+                command_file:   command_file,
+                reminder_file:  reminder_file,
+                history_file:   history_file,
+                history_length: 15,
+            }
+
         } else {
-            command_file  = PathBuf::from(&self.home_dir);
-            reminder_file = PathBuf::from(&self.home_dir);
-            history_file  = PathBuf::from(&self.home_dir);
+            command_file  = PathBuf::from(home_dir);
+            reminder_file = PathBuf::from(home_dir);
+            history_file  = PathBuf::from(home_dir);
 
             command_file.push(INSTALLED_COMMAND);
             reminder_file.push(INSTALLED_REMINDER);
             history_file.push(INSTALLED_HISTORY);
 
-            self.config = Some(
-                ConfigurationContent {
-                    command_file:   command_file,
-                    reminder_file:  reminder_file,
-                    history_file:   history_file,
-                    history_length: 15,
-                }
-            )
+            ConfigurationContent {
+                command_file:   command_file,
+                reminder_file:  reminder_file,
+                history_file:   history_file,
+                history_length: 15,
+            }
         }
     }
 
@@ -228,25 +156,52 @@ impl Configuration {
         self.portable
     }
 
-    pub fn get_history_len(&self) -> u32 {
-        match &self.config {
-            Some(config) => {
-                return config.history_length;
-            }
-            None => {
-                return 0;
-            }
-        }
+    pub fn history_path(&self) -> &PathBuf {
+        &self.config.history_file
     }
+}
 
-    pub fn history_path(&self) -> Result<PathBuf, io::Error> {
-        match &self.config {
-            Some(conf) => {
-                Ok(PathBuf::from(&conf.history_file))
-            },
-            None => {
-                Err(io::Error::new(io::ErrorKind::Other, "Serde Error"))
-            },
+fn is_script_portable() -> bool {
+
+    let installed_dir: PathBuf = PathBuf::from(INSTALLED_SCRIPT);
+
+    match find_executing_dir() {
+        Ok(exd) => {
+            if exd == installed_dir {
+                false
+            } else {
+                true
+            }
+        },
+        Err(_) => {
+            true
         }
     }
+}
+
+fn find_executing_dir() -> Result<PathBuf, Box<dyn Error>> {
+
+    let mut executing_dir = env::current_exe()?
+                                .canonicalize()?;
+
+    executing_dir = PathBuf::from(
+                        executing_dir.parent()
+                                        .ok_or("Cannot find parent")?
+                    );
+
+    Ok(executing_dir)
+}
+
+fn find_current_dir() -> Result<PathBuf, Box<dyn Error>> {
+    Ok(
+        env::current_dir()?
+            .canonicalize()?
+    )
+}
+
+fn find_home_dir() -> Result<PathBuf, Box<dyn Error>> {
+    Ok(
+        dirs::home_dir()
+                .ok_or("Cannot find home directory")?
+    )
 }

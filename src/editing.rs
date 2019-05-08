@@ -46,7 +46,7 @@ pub fn edit_message() -> Result<String, io::Error> {
     }
 
     let mut message = String::new();
-    File::open(file_path)?.read_to_string(&mut message);
+    File::open(file_path)?.read_to_string(&mut message)?;
 
     message = String::from(message.trim_end());
     Ok(message)
