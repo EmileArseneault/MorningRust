@@ -11,7 +11,7 @@ fn main() {
     // Read configuration
     let mut conf = configuration::Configuration::new();
     match conf.initialize(){
-        Ok(o)  => {
+        Ok(_)  => {
             println!("Config contains : {}", conf.get_history_len());
         },
         Err(e) => {
@@ -23,7 +23,7 @@ fn main() {
 
     // Print portable header if it is
     if conf.is_portable(){
-        println!("--    Morning is in portable mode    --");
+        println!("----- Morning is in portable mode -----");
     } else {
         println!("-- Morning is installed on the system --");
     }
@@ -33,7 +33,7 @@ fn main() {
     match conf.history_path() {
         Ok(path) => {
             match history.load_history(path.as_path()){
-                Ok(o) => {},
+                Ok(_) => {},
                 Err(e) => {
                     println!("Error while loading history");
                     println!("{}", e);
@@ -43,23 +43,6 @@ fn main() {
         Err(e) => {
             println!("No history file in loaded configuration");
             println!("{}", e);
-        }
-    }
-    history.print_history();
-
-    // Write history
-    match conf.history_path(){
-        Ok(path) => {
-            match history.write_history(path.as_path()) {
-                Ok(o) => {},
-                Err(e) => {
-                    println!("Error while writing history");
-                    println!("{}", e);
-                }
-            }
-        },
-        Err(e) => {
-            println!("No history file in loaded configuration");
         }
     }
 
@@ -88,6 +71,16 @@ fn main() {
                 },
                 arguments::Action::Past(nb_of_days) => {
                     println!("Show past message of {} days", nb_of_days);
+
+                    let message = history.find_message_by_nb_day(nb_of_days * -1);
+                    match message {
+                        Some(message_string) => {
+                            println!("{}", message_string);
+                        },
+                        None => {
+                            println!("No message for this day");
+                        }
+                    }
                 },
                 arguments::Action::Command => {
                     println!("Open command file for editing");
@@ -97,7 +90,7 @@ fn main() {
                 },
             }
         },
-        Err(stuff) => {
+        Err(_) => {
             argparser.print_help();
             return;
         }
@@ -107,19 +100,18 @@ fn main() {
     match conf.history_path(){
         Ok(path) => {
             match history.write_history(path.as_path()) {
-                Ok(o) => {},
+                Ok(_) => {},
                 Err(e) => {
                     println!("Error while writing history");
                     println!("{}", e);
                 }
             }
         },
-        Err(e) => {
+        Err(_) => {
+            println!("Error while writing history");
             println!("No history file in loaded configuration");
         }
     }
-
-    history.print_history();
 }
 
 

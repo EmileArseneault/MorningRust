@@ -103,7 +103,7 @@ impl ArgParser{
         // if no errors occured, use default behavior
         match action_to_take { 
             Action::Help => {
-                action_to_take = Action::Past(1);
+                action_to_take = Action::Past(0);
             },
             _ => {}
         }

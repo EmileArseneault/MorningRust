@@ -2,10 +2,9 @@ extern crate chrono;
 extern crate serde;
 extern crate serde_json;
 
-use std::path::Path;
-use std::path::PathBuf;
 use std::fs;
 use std::io;
+use std::path::Path;
 use chrono::{NaiveDate, Utc, Duration};
 use serde::{Deserialize, Serialize};
 
@@ -116,6 +115,7 @@ impl History {
         )
     }
     
+    #[allow(dead_code)]
     pub fn print_history(&self) {
         println!("----------History---------");
         for message in &self.list 
