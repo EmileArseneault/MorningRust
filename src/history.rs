@@ -7,6 +7,7 @@ use std::io;
 use std::path::Path;
 use chrono::{NaiveDate, Utc, Duration};
 use serde::{Deserialize, Serialize};
+use super::editing;
 
 // This is used to implement Serialize and Deserialise on the NaiveDate type
 mod json_date_format {
@@ -77,24 +78,32 @@ impl History {
         Ok(())
     }
 
-    pub fn add_message(&mut self, date: NaiveDate, text: String) {
+    pub fn add_message(&mut self, date: NaiveDate) -> Result<(), io::Error> {
+
+        let text = match self.pop_message_by_date(date) {
+            Some(message) => {
+                editing::edit_existing_message(&message)?
+            },
+            None => {
+                editing::edit_message()?
+            }
+        };
+
         self.list.push(
             Message{
                 date: date,
                 text: text,
             }
-        )
+        );
+
+        Ok(())
     }
 
-    pub fn add_delayed_message(&mut self, nb_days: i64, text: String) {
+    pub fn add_delayed_message(&mut self, nb_days: i64) -> Result<(), io::Error> {
         let date: NaiveDate = (Utc::today() + Duration::days(nb_days)).naive_utc();
 
-        self.list.push(
-            Message{
-                date: date,
-                text: text,
-            }
-        )
+        self.add_message(date)?;
+        Ok(())
     }
 
     pub fn add_message_now(&mut self, text: String) {
@@ -128,5 +137,41 @@ impl History {
             }
         }
         return None;
+    }
+
+    fn find_message_by_date(&self, date: NaiveDate) -> Option<&String> {
+
+        for message in &self.list 
+        {
+            if message.date == date 
+            {
+                return Some(&message.text);
+            }
+        }
+
+        return None;
+    }
+
+    fn pop_message_by_date(&mut self, date: NaiveDate) -> Option<String> {
+
+        let mut pop_message: Option<String> = None;
+
+        for message in &self.list 
+        {
+            if message.date == date 
+            {
+                pop_message = Some(message.text.clone());
+            }
+        }
+
+        match pop_message {
+            Some(pop_message) => {
+                self.list.retain(|s| s.date != date);
+                return Some(pop_message);
+            },
+            None => {
+                return None;
+            }
+        }
     }
 }

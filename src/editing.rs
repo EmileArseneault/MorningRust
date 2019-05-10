@@ -3,6 +3,7 @@ use std::io;
 use std::io::prelude::*;
 use std::env::temp_dir;
 use std::env;
+use std::fs;
 use std::fs::File;
 
 fn get_env_editor() -> Result<String, env::VarError> {
@@ -37,6 +38,30 @@ pub fn edit_message() -> Result<String, io::Error> {
 
     file_path.push("editable");
     File::create(&file_path)?;
+
+    match Command::new(editor).arg(&file_path).status() {
+        Ok(_) => {},
+        Err(error_code) => {
+            println!("Opening editor failed with code : {}", error_code);
+        }
+    }
+
+    let mut message = String::new();
+    File::open(file_path)?.read_to_string(&mut message)?;
+
+    message = String::from(message.trim_end());
+    Ok(message)
+}
+
+pub fn edit_existing_message(existing_message: &String) -> Result<String, io::Error> {
+    let editor = choose_editor();
+    let mut file_path = temp_dir();
+
+    file_path.push("editable");
+    File::create(&file_path)?;
+    fs::write(&file_path, existing_message)?;
+
+    // Need to push existing_message to file
 
     match Command::new(editor).arg(&file_path).status() {
         Ok(_) => {},

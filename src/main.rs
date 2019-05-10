@@ -52,11 +52,8 @@ fn main() {
                 arguments::Action::Message(nb_of_days) => {
                     println!("Message for {} days", nb_of_days);
 
-                    let message = editing::edit_message();
-                    match message {
-                        Ok(message_string) => {
-                            history.add_delayed_message(nb_of_days, message_string);
-                        },
+                    match history.add_delayed_message(nb_of_days) {
+                        Ok(_) => {},
                         Err(_) => {
                             println!("Could not get message");
                         }

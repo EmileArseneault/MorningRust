@@ -102,7 +102,7 @@ impl Configuration {
         }
     }
 
-    pub fn write_config(&self) -> Result<(), io::Error> {
+    pub fn write_config(&self) -> Result<(), Box<dyn Error>> {
 
         if self.config_change {
             let json_config = serde_json::to_string(&self.config)?;
