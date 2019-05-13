@@ -5,6 +5,7 @@ use std::env::temp_dir;
 use std::env;
 use std::fs;
 use std::fs::File;
+use std::path::PathBuf;
 
 fn get_env_editor() -> Result<String, env::VarError> {
     let editor = env::var("EDITOR")?;
@@ -22,7 +23,7 @@ fn choose_editor() -> String {
         },
         Err(_) => {
             println!("Set environnement variable $EDITOR to choose default editor");
-            println!("You an use the export command like so : export EDITOR=vim");
+            println!("You can use the export command like so : export EDITOR=vim");
 
             // Should test to see what editors are installed on the system
             editor = String::from("nano");
@@ -61,8 +62,6 @@ pub fn edit_existing_message(existing_message: &String) -> Result<String, io::Er
     File::create(&file_path)?;
     fs::write(&file_path, existing_message)?;
 
-    // Need to push existing_message to file
-
     match Command::new(editor).arg(&file_path).status() {
         Ok(_) => {},
         Err(error_code) => {
@@ -77,7 +76,13 @@ pub fn edit_existing_message(existing_message: &String) -> Result<String, io::Er
     Ok(message)
 }
 
-pub fn edit_file() {
+pub fn edit_file(file_path: &PathBuf) {
     let editor = choose_editor();
-    // This will be to edit command and reminder file with default editor
+
+    match Command::new(editor).arg(&file_path).status() {
+        Ok(_) => {},
+        Err(error_code) => {
+            println!("Opening editor failed with code : {}", error_code);
+        }
+    }
 }

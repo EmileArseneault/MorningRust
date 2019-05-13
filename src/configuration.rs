@@ -40,7 +40,7 @@ struct ConfigurationContent {
     command_file:   PathBuf,
     reminder_file:  PathBuf,
     history_file:   PathBuf,
-    history_length: u32
+    history_length: i64
 }
 
 impl Configuration {
@@ -158,6 +158,18 @@ impl Configuration {
 
     pub fn history_path(&self) -> &PathBuf {
         &self.config.history_file
+    }
+
+    pub fn history_length(&self) -> i64 {
+        return self.config.history_length;
+    }
+
+    pub fn command_file(&self) -> &PathBuf {
+        return &self.config.command_file;
+    }
+
+    pub fn reminder_file(&self) -> &PathBuf {
+        return &self.config.reminder_file;
     }
 }
 

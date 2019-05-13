@@ -8,6 +8,7 @@ use std::path::Path;
 use chrono::{NaiveDate, Utc, Duration};
 use serde::{Deserialize, Serialize};
 use super::editing;
+use super::configuration::Configuration;
 
 // This is used to implement Serialize and Deserialise on the NaiveDate type
 mod json_date_format {
@@ -70,10 +71,14 @@ impl History {
         Ok(())
     }
 
-    pub fn write_history(&self, history_path: &Path) -> Result<(), io::Error> {
+    pub fn write_history(&mut self, conf: &Configuration) -> Result<(), io::Error> {
+        
+        // Remove of bounds messages
+        let date: NaiveDate = (Utc::today() - Duration::days(conf.history_length())).naive_utc();
+        self.list.retain(|s| s.date >= date);
 
         let json_config = serde_json::to_string(&self.list)?;
-        fs::write(history_path, json_config)?;
+        fs::write(conf.history_path(), json_config)?;
 
         Ok(())
     }

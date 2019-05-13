@@ -38,7 +38,6 @@ fn main() {
         }
     };
 
-
     let argparser = ArgParser::new();
 
     // Parse command line arguments
@@ -53,7 +52,9 @@ fn main() {
                     println!("Message for {} days", nb_of_days);
 
                     match history.add_delayed_message(nb_of_days) {
-                        Ok(_) => {},
+                        Ok(_) => {
+                            println!("Message added");
+                        },
                         Err(_) => {
                             println!("Could not get message");
                         }
@@ -73,10 +74,23 @@ fn main() {
                     }
                 },
                 arguments::Action::Command => {
-                    println!("Open command file for editing");
+                    editing::edit_file(conf.command_file());
                 },
                 arguments::Action::Reminder => {
-                    println!("Open reminder file for editing");
+                    editing::edit_file(conf.reminder_file());
+                },
+                arguments::Action::Morning => {
+                    println!("Good Morning !");
+
+                    let message = history.find_message_by_nb_day(0);
+                    match message {
+                        Some(message_string) => {
+                            println!("{}", message_string);
+                        },
+                        None => {
+                            println!("No message for today");
+                        }
+                    }
                 },
             }
         },
@@ -87,7 +101,7 @@ fn main() {
     }
 
     // Write history
-    match history.write_history(conf.history_path().as_path()) {
+    match history.write_history(&conf) {
         Ok(_) => {},
         Err(e) => {
             println!("Error while writing history");
@@ -104,25 +118,3 @@ fn main() {
         }
     }
 }
-
-
-
-// fn print_help(){
-//     println!();
-//     println!("Usage : morning [OPTION]...");
-// 	println!("----------------------------");
-// 	println!();
-// 	println!("  -n                 Used to write a message to print to tomorrow.");
-// 	println!("                       Can be used with a positive integer to");
-// 	println!("                       report the message by the number of days.");
-// 	println!("  -w                 Used as a shortcut to 'morning -n 3' to be used");
-// 	println!("                       report the message by the number of days.");
-// 	println!("  -p                 Display past messages by the number of days given.");
-// 	println!("                       Messages have to be in history time interval.");
-// 	println!("                       (config variable historytime >= days given)");
-// 	println!("  -r                 Open reminders file in user's default editor.");
-// 	println!("  -c                 Open commands file in user's default editor.");
-// 	println!();
-//     println!("  -h,--help          Display this help and exit.");
-//     println!();
-// }

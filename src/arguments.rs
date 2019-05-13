@@ -5,6 +5,7 @@ extern crate getopts;
 #[derive(Debug)]
 pub enum Action {
     Help,
+    Morning,
     Message(i64),
     Past(i64),
     Command,
@@ -23,8 +24,8 @@ impl ArgParser{
         argparser.optflag("h", "help", "Display this help and exit");
         argparser.optflagopt("n", "next", "Used to write a message for the next day", "DAYS");
         argparser.optflagopt("p", "past", "Show past messages for number of days", "DAYS");
-        argparser.optflag("c", "command", "Used to write commands to be executed each day");
-        argparser.optflag("r", "reminder", "Used to write messages to be shown each day");
+        argparser.optflag("c", "command", "Used to write commands to be executed everyday");
+        argparser.optflag("r", "reminder", "Used to write messages to be shown each everyday");
 
         let brief = format!("Usage: morning [options] ...");
 
@@ -69,6 +70,11 @@ impl ArgParser{
             }
         }
 
+        // If no options were provided, use default behavior
+        if option_count == 0 {
+            action_to_take = Action::Morning;
+        }
+
         let mut nb_of_days;
 
         // Check option used
@@ -98,14 +104,6 @@ impl ArgParser{
 
         if matches.opt_present("c") {
             action_to_take = Action::Command;
-        }
-
-        // if no errors occured, use default behavior
-        match action_to_take { 
-            Action::Help => {
-                action_to_take = Action::Past(0);
-            },
-            _ => {}
         }
 
         // Checks if other arguments were not parsed
