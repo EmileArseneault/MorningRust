@@ -2,6 +2,8 @@ mod arguments;
 mod configuration;
 mod history;
 mod editing;
+mod reminder;
+mod command;
 
 use arguments::ArgParser;
 use configuration::Configuration;
@@ -24,6 +26,7 @@ fn main() {
     // Print portable header if it is
     if conf.is_portable(){
         println!("----- Morning is in portable mode -----");
+        println!();
     }
 
     // Load history
@@ -74,23 +77,15 @@ fn main() {
                     }
                 },
                 arguments::Action::Command => {
-                    editing::edit_file(conf.command_file());
+                    command::edit_command(&conf);
                 },
                 arguments::Action::Reminder => {
-                    editing::edit_file(conf.reminder_file());
+                    reminder::edit_reminder(&conf);
                 },
                 arguments::Action::Morning => {
-                    println!("Good Morning !");
-
-                    let message = history.find_message_by_nb_day(0);
-                    match message {
-                        Some(message_string) => {
-                            println!("{}", message_string);
-                        },
-                        None => {
-                            println!("No message for today");
-                        }
-                    }
+                    command::execute_commands(&conf);
+                    reminder::print_reminder(&conf);
+                    history.print_today_message();
                 },
             }
         },

@@ -110,15 +110,6 @@ impl History {
         self.add_message(date)?;
         Ok(())
     }
-
-    pub fn add_message_now(&mut self, text: String) {
-        self.list.push(
-            Message{
-                date: Utc::today().naive_utc(),
-                text: text,
-            }
-        )
-    }
     
     #[allow(dead_code)]
     pub fn print_history(&self) {
@@ -176,6 +167,21 @@ impl History {
             },
             None => {
                 return None;
+            }
+        }
+    }
+
+    pub fn print_today_message(&self) {
+        let message = self.find_message_by_nb_day(0);
+
+        match message {
+            Some(message) => {
+                println!("------------------- Message ---------------------");
+                println!("{}", message);
+            },
+            None => {
+                println!("------------------- Message ---------------------");
+                println!("No message for today");
             }
         }
     }
