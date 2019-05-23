@@ -13,10 +13,10 @@ extern crate serde_json;
 const INSTALLED_SCRIPT:   &str = "/usr/bin/";
 // Configuration file for installed requires root access at /etc/morning.conf
 // use ~/.config/morning.conf or ~/.config/morning/morning.conf or ~/.morning/morning.conf?
-const INSTALLED_CONFIG:   &str = "~/.config/morning.conf";
-const INSTALLED_COMMAND:  &str = "~/.morning/command";
-const INSTALLED_REMINDER: &str = "~/.morning/reminder.txt";
-const INSTALLED_HISTORY:  &str = "~/.morning/history.json";
+const INSTALLED_CONFIG:   &str = ".config/morning.conf";
+const INSTALLED_COMMAND:  &str = ".morning/command";
+const INSTALLED_REMINDER: &str = ".morning/reminder.txt";
+const INSTALLED_HISTORY:  &str = ".morning/history.json";
 
 const PORTABLE_CONFIG:    &str = "morning.conf";
 const PORTABLE_COMMAND:   &str = "command";
@@ -59,7 +59,8 @@ impl Configuration {
             config_file = PathBuf::from(&executing_dir);
             config_file.push(PORTABLE_CONFIG);
         } else {
-            config_file = PathBuf::from(INSTALLED_CONFIG);
+            config_file = PathBuf::from(&home_dir);
+            config_file.push(INSTALLED_CONFIG);
         }
 
         let config: ConfigurationContent;

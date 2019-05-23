@@ -5,6 +5,7 @@ extern crate serde_json;
 use std::fs;
 use std::io;
 use std::path::Path;
+use std::error::Error;
 use chrono::{NaiveDate, Utc, Duration};
 use serde::{Deserialize, Serialize};
 use super::editing;
@@ -47,7 +48,7 @@ impl History {
         }
     }
 
-    pub fn load_history(&mut self, history_path: &Path) -> Result<(), io::Error> {
+    pub fn load_history(&mut self, history_path: &Path) -> Result<(), Box<dyn Error>> {
         self.list.clear();
         
 /*         let json_string = r#"[
@@ -65,8 +66,17 @@ impl History {
                 }
         ]"#; */
 
-        let json_string = fs::read_to_string(history_path)?;
-        self.list = serde_json::from_str(&json_string)?;
+        // Check if directory exists
+        let parent = history_path.parent().ok_or("Cannot find parent of path constructed with home")?;
+        if !fs::metadata(parent).is_ok() {
+            fs::create_dir(parent)?;
+        }
+
+        // Check if file exists
+        if fs::metadata(history_path).is_ok() {
+            let json_string = fs::read_to_string(history_path)?;
+            self.list = serde_json::from_str(&json_string)?;
+        }
 
         Ok(())
     }
